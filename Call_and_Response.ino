@@ -27,11 +27,10 @@ bool Ready2Print = false;
 double cmds_rec = 1;
 
 struct cmdSet t[ 2 ] = {
-  { "aRead", AnalogRead },
-  { "dRead", DigitalRead } 
+  { "aRead", AnalogRead, 1 },
+  { "dRead", DigitalRead, 1 } 
 };
 int cmdSetSize = 2;
-
 
 
 void setup() {
@@ -43,12 +42,12 @@ void setup() {
 
   pinMode( TURBIDITY, INPUT );
   pinMode( PH, INPUT );
+  pinMode( 9, INPUT );
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   if( Ready2Print ) {
-
     interpret_msg( buf, t, &cmds_rec, cmdSetSize );
       
     buf.remove( 0, buf.length() );

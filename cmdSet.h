@@ -4,6 +4,7 @@
 typedef struct cmdSet {
   String cmd_name;
   int (*f)(int);
+  int argIn;
 };
 
 int DigitalRead( int pin );
