@@ -24,19 +24,22 @@ char storage_array[ ELEMENT_COUNT ];
 String buf;
 bool Ready2Print = false;
 
-double cmds_rec = 1;
+int cmds_rec = 0;
 
-struct cmdSet t[ 2 ] = {
+struct cmdSet t[ 5 ] = {
   { "aRead", AnalogRead, 1 },
-  { "dRead", DigitalRead, 1 } 
+  { "dRead", DigitalRead, 1 },
+  { "pinMode", mSetPinMode, 2 },
+  { "dWrite", DigitalWrite, 2 },
+  { "aWrite", AnalogWrite, 2 }
 };
-int cmdSetSize = 2;
+int cmdSetSize = 5;
 
 
 void setup() {
   // put your setup code here, to run once:
   USART_Init( MYUBRR );
-  
+
   pinMode( LED, OUTPUT );
   Timer1_Init( 1 );
 
@@ -48,8 +51,15 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if( Ready2Print ) {
-    interpret_msg( buf, t, &cmds_rec, cmdSetSize );
-      
+    cmds_rec++;
+    int o = interpret_msg( buf, t, cmds_rec, cmdSetSize );
+    if( cmds_rec != o ) {
+      #if VERBOSE
+        mprintf( "Realigning counts...\n" );
+      #endif
+      cmds_rec = o;
+    }
+
     buf.remove( 0, buf.length() );
     Ready2Print = false;
   }
@@ -57,28 +67,28 @@ void loop() {
 
 
 /***************************************************8
- * For some silly reason, the compile won't allow the 
- * noInterrupts and interrupts commands to be outside 
+ * For some silly reason, the compile won't allow the
+ * noInterrupts and interrupts commands to be outside
  * of the main file. So here they are...
  */
 void USART_Init( unsigned int ubrr )
 {
   noInterrupts();
-  
+
   UBRR0 = ubrr;
-  UCSR0C |= (1 << UCSZ01) | (1 << UCSZ00); 
+  UCSR0C |= (1 << UCSZ01) | (1 << UCSZ00);
   // Use 8-bit character sizes
-  UCSR0B |= (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);  
-  // Turn on the transmission, reception, and Receive interrupt 
-   
+  UCSR0B |= (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
+  // Turn on the transmission, reception, and Receive interrupt
+
   interrupts();// enable global interrupt
 }
 
-void USART_Transmit( char data ) 
+void USART_Transmit( char data )
 {
   noInterrupts();
   while( !( UCSR0A & (1<<UDRE0)) );
-  
+
   UDR0 = data;
   interrupts();
 }
@@ -106,7 +116,7 @@ void Timer1_Init( unsigned int hz )
 
 
 /****************************************************************
- * Interrupt routines because they probably won't outside of the 
+ * Interrupt routines because they probably won't outside of the
  * the arduino IDE...Need to work on external toolchain
  */
 
@@ -116,7 +126,7 @@ ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
 }
 
 ISR(USART_RX_vect)
-{ 
+{
   temp=UDR0;// read the received data byte in temp
   buf += temp;
   if( strcmp( temp, '\n' ) == 0 ) Ready2Print = true;

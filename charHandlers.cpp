@@ -5,8 +5,10 @@ int findChar( char *str, int strLen, int startI, char del ) {
     return -1;
 
   int ind = startI;
-  while( str[ ind ] != '\0' && ind < strLen && str[ ind ] != del  )
-    ind++;
+  while( str[ ind ] != '\0' && ind < strLen && str[ ind ] != del  ) {
+    ind++;  
+  }
+  
 
   if( ind == startI ) 
     return -1;
@@ -26,11 +28,6 @@ int substr( char *parent, int start, int _stop, char *s ) {
   for( int i=0; i < _stop-1; i++ ) {
     s[i] = parent[i+start+1];
   }
-
-
-  #if VERBOSE
-    mprintf("string: %s, substr: %s\n", parent, s );
-  #endif
 
   return 1;
 }
